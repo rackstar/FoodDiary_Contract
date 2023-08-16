@@ -2,6 +2,8 @@
 pragma solidity >=0.8.19;
 
 contract FoodDiary {
+    event AddFoodEntry(address indexed user, bytes32 foodName, uint calories, uint timestamp);
+
     struct FoodEntry {
         // bytes32 is cheaper than string as we ensure the string fits in a 32 byte slot
         // max 32 ASCII/UTF-8 characters - anymore will be truncated
@@ -9,7 +11,7 @@ contract FoodDiary {
         // Slot packing - ensure both calorie and timestamp fits in a 32 bytes slot to save gas
         // uint24 (3 bytes) - 16,777,215 maximum calorie per food entry
         uint24 calories;
-        // uin32 (8 bytes) - max unix timestamp Sun Feb 07 2106
+        // uin32 (8 bytes) - max unix timestamp Feb 07 2106
         uint32 timestamp;
     }
 
@@ -33,6 +35,7 @@ contract FoodDiary {
     function addFoodEntry(bytes32 _name, uint24 _calories, uint32 _timestamp) external {
         FoodEntry memory food = FoodEntry(_name, _calories, _timestamp);
         usersFoodEntries[msg.address].push(food);
+        event AddFoodEntry(msg.address, _name, _calories, _timestamp);
     }
 
     // Admin only methods
