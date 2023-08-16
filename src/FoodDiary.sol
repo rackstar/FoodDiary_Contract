@@ -43,4 +43,31 @@ contract FoodDiary {
     function setUserDailyCalorieThreshold(address _user, uint256 _dailyCalorieThreshold) external onlyAdmin {
         usersDailyCalorieThreshold[_user] = _dailyCalorieThreshold;
     }
+
+    function getEntiresLastTwoWeeks() onlyAdmin external returns (uint256, uint256) {
+        uint128 memory lastWeekEntries = 0;
+        uint128 memory last2WeekEntries = 0;
+        // - 1 second will let us avoid using >=, saving gas
+        uint64 memory oneWeekAgo = block.timestamp - 1 week - 1 second;
+        uint64 memory twoWeekAgo = block.timestamp - 2 week - 1 second;
+
+        // looping backwards will save unnecessary iteration, avoiding >= will also save gas
+        for(uint256 i = foodEntryTimestamps.length - 1; i > -1;) {
+            // disable overflow check to save gas (since 0.8.0 arithmetic operations are now checked for overflows)
+            unchecked {
+                // cache foodEntryTimestamp to avoid reading it off storage twice
+                uint32 memory foodEntryTimestamp = foodEntryTimestamps[i];
+                if (foodEntryTimestamp > oneWeekAgo) {
+                    lastWeekEntries++;
+                } else if (foodEntryTimestamp > twoWeeksAgo) {
+                    last2WeekEntries++;
+                } else {
+                    // older than 2 weeks ago
+                    break;
+                }
+                i--;
+            }
+        }
+        return (lastWeekEntries, last2WeekEntries);
+    }
 }
