@@ -13,6 +13,8 @@ contract FoodDiary {
         uint32 timestamp;
     }
 
+    // daily calorie threshold limit
+    uint16 public constant defaultDailyBmr = 2100;
     mapping(address => FoodEntry[]) usersFoodEntries;
 
     // TODO: js validate bytes32 _name, uint24 _calories, uint32 _timestamp correct length
