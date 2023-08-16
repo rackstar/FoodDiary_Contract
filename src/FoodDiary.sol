@@ -2,7 +2,7 @@
 pragma solidity >=0.8.19;
 
 contract FoodDiary {
-    event AddFoodEntry(address indexed user, bytes32 foodName, uint calories, uint timestamp);
+    event AddFoodEntry(address indexed user, bytes32 foodName, uint24 calories, uint32 timestamp);
 
     struct FoodEntry {
         // bytes32 is cheaper than string as we ensure the string fits in a 32 byte slot
@@ -17,13 +17,14 @@ contract FoodDiary {
 
     address public admin;
     uint16 public constant defaultDailyCalorieThreshold = 2100;
+    uint32[] private foodEntryTimestamps; // uint32 will let 8 timestamp entries be packed into a slot
 
     mapping(address => FoodEntry[]) usersFoodEntries;
     mapping(address => uint256) usersDailyCalorieThreshold;
 
     constructor() public {
         // Set the contract initiator as the admin of the contract.
-        admin = msg.address;
+        admin = msg.sender;
     }
 
     modifier onlyAdmin() {
@@ -34,8 +35,9 @@ contract FoodDiary {
     // TODO: js validate bytes32 _name, uint24 _calories, uint32 _timestamp correct length
     function addFoodEntry(bytes32 _name, uint24 _calories, uint32 _timestamp) external {
         FoodEntry memory food = FoodEntry(_name, _calories, _timestamp);
-        usersFoodEntries[msg.address].push(food);
-        event AddFoodEntry(msg.address, _name, _calories, _timestamp);
+        usersFoodEntries[msg.sender].push(food);
+        foodEntryTimestamps.push(_timestamp);
+        emit AddFoodEntry(msg.sender, _name, _calories, _timestamp);
     }
 
     // Admin only methods
@@ -44,22 +46,24 @@ contract FoodDiary {
         usersDailyCalorieThreshold[_user] = _dailyCalorieThreshold;
     }
 
-    function getEntiresLastTwoWeeks() onlyAdmin external returns (uint256, uint256) {
-        uint128 memory lastWeekEntries = 0;
-        uint128 memory last2WeekEntries = 0;
+    function getEntiresLastTwoWeeks() external view onlyAdmin returns (uint256, uint256) {
+        uint128 lastWeekEntries = 0;
+        uint128 last2WeekEntries = 0;
         // - 1 second will let us avoid using >=, saving gas
-        uint64 memory oneWeekAgo = block.timestamp - 1 week - 1 second;
-        uint64 memory twoWeekAgo = block.timestamp - 2 week - 1 second;
+        uint256 oneWeekAgo = block.timestamp - 1 weeks - 1 seconds;
+        uint256 twoWeeksAgo = block.timestamp - 2 weeks - 1 seconds;
 
-        // looping backwards will save unnecessary iteration, avoiding >= will also save gas
-        for(uint256 i = foodEntryTimestamps.length - 1; i > -1;) {
+        // looping backwards will save unnecessary iteration
+        for (uint256 i = foodEntryTimestamps.length - 1; i >= 0;) {
             // disable overflow check to save gas (since 0.8.0 arithmetic operations are now checked for overflows)
             unchecked {
                 // cache foodEntryTimestamp to avoid reading it off storage twice
-                uint32 memory foodEntryTimestamp = foodEntryTimestamps[i];
+                uint32 foodEntryTimestamp = foodEntryTimestamps[i];
                 if (foodEntryTimestamp > oneWeekAgo) {
+                    // last week
                     lastWeekEntries++;
                 } else if (foodEntryTimestamp > twoWeeksAgo) {
+                    // last two weeks
                     last2WeekEntries++;
                 } else {
                     // older than 2 weeks ago
