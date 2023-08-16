@@ -22,7 +22,7 @@ contract FoodDiary {
     mapping(address => FoodEntry[]) usersFoodEntries;
     mapping(address => uint256) usersDailyCalorieThreshold;
 
-    constructor() public {
+    constructor() {
         // Set the contract initiator as the admin of the contract.
         admin = msg.sender;
     }
@@ -38,6 +38,10 @@ contract FoodDiary {
         usersFoodEntries[msg.sender].push(food);
         foodEntryTimestamps.push(_timestamp);
         emit AddFoodEntry(msg.sender, _name, _calories, _timestamp);
+    }
+
+    function getFoodEntries() external view returns (FoodEntry[] memory) {
+        return usersFoodEntries[msg.sender];
     }
 
     // Admin only methods
