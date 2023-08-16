@@ -8,11 +8,15 @@
   },
   "private": true,
   "scripts": {
-    "test": "echo 'NO TEST YET'",
+    "test": "node js/index.js",
     "clean": "rm -rf cache out",
     "lint": "pnpm lint:sol && pnpm prettier:check",
     "lint:sol": "forge fmt --check && pnpm solhint {script,src,test}/**/*.sol",
     "prettier:check": "prettier --check **/*.{json,md,yml} --ignore-path=.prettierignore",
     "prettier:write": "prettier --write **/*.{json,md,yml} --ignore-path=.prettierignore"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "ethers": "^6.7.1"
   }
 }
