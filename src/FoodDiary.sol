@@ -13,13 +13,31 @@ contract FoodDiary {
         uint32 timestamp;
     }
 
-    // daily calorie threshold limit
-    uint16 public constant defaultDailyBmr = 2100;
+    address public admin;
+    uint16 public constant defaultDailyCalorieThreshold = 2100;
+
     mapping(address => FoodEntry[]) usersFoodEntries;
+    mapping(address => uint256) usersDailyCalorieThreshold;
+
+    constructor() public {
+        // Set the contract initiator as the admin of the contract.
+        admin = msg.address;
+    }
+
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Unauthorized");
+        _;
+    }
 
     // TODO: js validate bytes32 _name, uint24 _calories, uint32 _timestamp correct length
     function addFoodEntry(bytes32 _name, uint24 _calories, uint32 _timestamp) external {
         FoodEntry memory food = FoodEntry(_name, _calories, _timestamp);
         usersFoodEntries[msg.address].push(food);
+    }
+
+    // Admin only methods
+
+    function setUserDailyCalorieThreshold(address _user, uint256 _dailyCalorieThreshold) external onlyAdmin {
+        usersDailyCalorieThreshold[_user] = _dailyCalorieThreshold;
     }
 }
