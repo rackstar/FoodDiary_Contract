@@ -1,0 +1,18 @@
+{
+  "name": "food_diary_contract",
+  "description": "Food diary contract",
+  "version": "0.1.0",
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "solhint-community": "^3.6.0"
+  },
+  "private": true,
+  "scripts": {
+    "test": "echo 'NO TEST YET'",
+    "clean": "rm -rf cache out",
+    "lint": "pnpm lint:sol && pnpm prettier:check",
+    "lint:sol": "forge fmt --check && pnpm solhint {script,src,test}/**/*.sol",
+    "prettier:check": "prettier --check **/*.{json,md,yml} --ignore-path=.prettierignore",
+    "prettier:write": "prettier --write **/*.{json,md,yml} --ignore-path=.prettierignore"
+  }
+}
